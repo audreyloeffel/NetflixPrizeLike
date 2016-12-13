@@ -72,4 +72,4 @@ def build_index_groups(train):
 def calculate_mse(real_label, prediction):
     """calculate MSE."""
     t = real_label - prediction
-    return 0.5 * t.dot(t.T)
+    return t.dot(t.T)
