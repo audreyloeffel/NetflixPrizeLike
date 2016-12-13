@@ -3,6 +3,8 @@
 
 from itertools import groupby
 
+import csv
+import re
 import numpy as np
 import scipy.sparse as sp
 
@@ -73,3 +75,63 @@ def calculate_mse(real_label, prediction):
     """calculate MSE."""
     t = real_label - prediction
     return t.dot(t.T)
+
+def split_data(ratings, num_items_per_user, num_users_per_item,
+               min_num_ratings, p_test=0.1):
+    """split the ratings to training data and test data.
+    Args:
+        min_num_ratings:
+            all users and items we keep must have at least min_num_ratings per user and per item.
+    """
+    # set seed
+    np.random.seed(988)
+
+    # select user and item based on the condition.
+    valid_users = np.where(num_items_per_user >= min_num_ratings)[0]
+    valid_items = np.where(num_users_per_item >= min_num_ratings)[0]
+    valid_ratings = ratings[valid_items, :][: , valid_users]
+
+    indices = valid_ratings.nonzero()
+
+    train = sp.lil_matrix(valid_ratings.shape)
+    test = sp.lil_matrix(valid_ratings.shape)
+    for i, j in zip(indices[0], indices[1]):
+        r = np.random.random()
+        if r < 0.1:
+            test[i,j] = valid_ratings[i,j]
+        else:
+            train[i,j] = valid_ratings[i,j]
+
+    print("Total number of nonzero elements in original data:{v}".format(v=ratings.nnz))
+    print("Total number of nonzero elements in train data:{v}".format(v=train.nnz))
+    print("Total number of nonzero elements in test data:{v}".format(v=test.nnz))
+    return valid_ratings, train, test
+
+def compute_error(data, user_features, item_features, nz):
+    """compute the loss (MSE) of the prediction of nonzero elements."""
+    prediction = item_features.dot(user_features.T)
+    pred_new = []
+    real_data = []
+    for i, j in nz:
+        pred_new.append(prediction[i, j])
+        real_data.append(data[i, j])
+
+    mse = calculate_mse(np.array(real_data), np.array(pred_new))/data.nnz
+    return mse
+
+def create_csv_submission(prediction):
+    """
+    Creates an output file in csv format for submission to kaggle
+    Arguments:
+    """
+    indices = []
+    with open("../data/sampleSubmission.csv", 'r') as sample:
+        data = sample.read().splitlines()[1:]
+    indices = [ re.match(r'r(\d+?)_c(\d+?),.*?', line, re.DOTALL).groups() for line in data ]
+
+    with open("../data/submission.csv", 'w') as csvfile:
+        fieldnames = ['Id', 'Prediction']
+        writer = csv.DictWriter(csvfile, delimiter=",", fieldnames=fieldnames)
+        writer.writeheader()
+        for row, col in indices:
+            writer.writerow({'Id':"r" + row + "_c" + col,'Prediction':prediction[int(row) - 1, int(col) - 1]})
