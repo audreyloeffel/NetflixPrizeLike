@@ -52,9 +52,11 @@ def ALS(train, test, n_f, l_u, l_i):
         delta_rmse = rmse
         rmse = compute_error(train, user_features, item_features, nz_train)
         it += 1
-        print("iter: {}, RMSE on training set: {}.".format(it, rmse))
+        # print("iter: {}, RMSE on training set: {}.".format(it, rmse))
 
     rmse_test = compute_error(test, user_features, item_features, nz_test)
-    print("RMSE on testing set: {}.".format(rmse_test))
+    with open('overnight_logging', 'a') as f:
+      f.write("RMSE on testing set: {}, with k: {}, l_u: {}, l_i {}\n".format(rmse_test, num_features, lambda_user, lambda_item))
+    # print("RMSE on testing set: {}, with k: {}, l_u: {}, l_i {}".format(rmse_test, rmse_test, lambda_user, lambda_item))
 
-    return item_features.dot(user_features.T)
+    return item_features.dot(user_features.T), rmse_test
