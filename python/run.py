@@ -35,7 +35,7 @@ def create_submission_file_best_param(ratings, test, state_file_path):
   already_computed = [(float(pred), int(k), float(l_u), float(l_i)) for pred, k, l_u, l_i in already_computed]
   best_pred, k, lambda_user, lambda_item = sorted(already_computed, key=lambda tup: tup[0])[0]
   print("The best prediction right now is: {}, with k = {}, lambda_user = {} and lambda_item = {}.\nComputing and outputting to csv file...".format(best_pred, k, lambda_user, lambda_item))
-  prediction, test_rmse = ALS(ratings, test, k, lambda_user, lambda_item)
+  prediction, test_rmse = ALS(ratings, test, k, lambda_item, lambda_user)
 
   create_csv_submission(prediction)
 
@@ -52,10 +52,10 @@ if __name__ == '__main__':
       ratings, num_items_per_user, num_users_per_item, min_num_ratings=10, p_test=0.1)
 
   # Computing the best parameters
-  ks = [ i for i in range(3, 11)]
+  ks = [ i for i in range(3, 7)]
   lambda_users = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
   lambda_items = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
-  run_als_asynchronously(train, test, 'overnight_logging', ks, lambda_users, lambda_items)
+  # run_als_asynchronously(train, test, 'overnight_logging', ks, lambda_users, lambda_items)
 
   # Creating the sub_file with the best prediction
-  # create_submission_file_best_param(ratings, test, 'overnight_logging')
+  create_submission_file_best_param(ratings, test, 'overnight_logging')
