@@ -75,7 +75,7 @@ if __name__ == '__main__':
 
   # Computing the best parameters
   gammas = [0.04]
-  ks = [i for i in range(3, 11)]
+  ks = [3, 5, 7, 9]
   lambda_users = [0.9, 0.5, 0.3, 0.1]
   lambda_items = [0.009, 0.007, 0.005, 0.01]
   # run_als_asynchronously(train, test, 'overnight_logging', ks, lambda_users, lambda_items)
