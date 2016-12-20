@@ -53,7 +53,7 @@ def SGD(train, test, gamma, k, lambda_u, lambda_i):
 
         errors.append(rmse)
 
-    rmse = compute_error(test, user_features, item_features, nz_test)
+    rmse_test = compute_error(test, user_features, item_features, nz_test)
     with open('overnight_logging_sgd', 'a') as f:
       f.write("RMSE on testing set: {}, with g: {}, k: {}, l_u: {}, l_i: {}\n".format(rmse_test, gamma, num_features, lambda_user, lambda_item))
     # print("RMSE on test data: {} with gamma={}, k={}, lambda_u={}, lambda_i={}.".format(rmse, gamma_init, k, lambda_u, lambda_i))
