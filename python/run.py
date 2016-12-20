@@ -52,7 +52,7 @@ if __name__ == '__main__':
       ratings, num_items_per_user, num_users_per_item, min_num_ratings=10, p_test=0.1)
 
   # Computing the best parameters
-  ks = [ i for i in range(3, 11)]
+  ks = [ i for i in range(7, 11)]
   lambda_users = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
   lambda_items = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
   run_als_asynchronously(train, test, 'overnight_logging', ks, lambda_users, lambda_items)
