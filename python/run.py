@@ -17,7 +17,7 @@ def run_als_asynchronously(train, test, state_file_path, ks, lambda_users, lambd
 def run_sgd_asynchronously(train, test, state_file_path, gammas, ks, lambda_users, lambda_items):
   args_list = logging(state_file_path)
 
-  pool = multiprocessing.Pool(processes=3)
+  pool = multiprocessing.Pool(processes=7)
   pool.starmap(SGD, args_list)
 
 def logging(state_file_path):
