@@ -15,9 +15,11 @@ def run_als_asynchronously(train, test, state_file_path, ks, lambda_users, lambd
   pool.starmap(ALS, args_list)
 
 def run_sgd_asynchronously(train, test, state_file_path, gammas, ks, lambda_users, lambda_items):
-  args_list = logging(state_file_path)
+  # args_list = logging(state_file_path)
+  # args_list = [(train, test, 0.04, 9, 0.1, 0.014), (train, test, 0.04, 9, 0.1, 0.016), (train, test, 0.04, 9, 0.105, 0.01)]
+  args_list = [(train, test, 0.04, 9, 0.107, 0.015), (train, test, 0.04, 9, 0.103, 0.015)]
 
-  pool = multiprocessing.Pool(processes=7)
+  pool = multiprocessing.Pool(processes=2)
   pool.starmap(SGD, args_list)
 
 def logging(state_file_path):
@@ -49,15 +51,23 @@ def logging(state_file_path):
   return args_list
 
 
-def create_submission_file_best_param(ratings, test, state_file_path):
+def create_submission_file_best_param(ratings, test, state_file_path, algo="ALS"):
   with open(state_file_path, 'r') as log:
     data = log.read().splitlines()
 
-  already_computed = [ re.match(r'.*?\:\s(.*?),\s.*?k\:\s(.*?),\sl_u\:\s(.*?),\sl_i\s(.*?)$', line, re.DOTALL).groups() for line in data ]
-  already_computed = [(float(pred), int(k), float(l_u), float(l_i)) for pred, k, l_u, l_i in already_computed]
-  best_pred, k, lambda_user, lambda_item = sorted(already_computed, key=lambda tup: tup[0])[0]
-  print("The best prediction right now is: {}, with k = {}, lambda_user = {} and lambda_item = {}.\nComputing and outputting to csv file...".format(best_pred, k, lambda_user, lambda_item))
-  prediction, test_rmse = ALS(ratings, test, k, lambda_item, lambda_user)
+  if algo == "ALS":
+    already_computed = [ re.match(r'.*?\:\s(.*?),\s.*?k\:\s(.*?),\sl_u\:\s(.*?),\sl_i\s(.*?)$', line, re.DOTALL).groups() for line in data ]
+    already_computed = [(float(pred), int(k), float(l_u), float(l_i)) for pred, k, l_u, l_i in already_computed]
+    best_pred, k, lambda_user, lambda_item = sorted(already_computed, key=lambda tup: tup[0])[0]
+    print("The best prediction right now is: {}, with k = {}, lambda_user = {} and lambda_item = {}.\nComputing and outputting to csv file...".format(best_pred, k, lambda_user, lambda_item))
+    prediction, test_rmse = ALS(ratings, test, k, lambda_item, lambda_user)
+
+  else:
+    already_computed = [ re.match(r'.*?\:\s(.*?),\s.*?g\:\s(.*?),\sk\:\s(.*?),\sl_u\:\s(.*?),\sl_i\:\s(.*?)$', line, re.DOTALL).groups() for line in data ]
+    already_computed = [(float(pred), float(g), int(k), float(l_u), float(l_i)) for pred, g, k, l_u, l_i in already_computed]
+    best_pred, g, k, lambda_user, lambda_item = sorted(already_computed, key=lambda tup: tup[0])[0]
+    print("The best prediction right now is: {}, with g = {}, k = {}, lambda_user = {} and lambda_item = {}.\nComputing and outputting to csv file...".format(best_pred, g, k, lambda_user, lambda_item))
+    prediction, test_rmse = SGD(ratings, test, g, k, lambda_user, lambda_item)
 
   create_csv_submission(prediction)
 
@@ -75,7 +85,7 @@ if __name__ == '__main__':
 
   # Computing the best parameters
   gammas = [0.04]
-  ks = [3, 5, 7, 9]
+  ks = [9]
   lambda_users = [0.9, 0.5, 0.3, 0.1]
   lambda_items = [0.009, 0.007, 0.005, 0.01]
   # run_als_asynchronously(train, test, 'overnight_logging', ks, lambda_users, lambda_items)
@@ -83,3 +93,4 @@ if __name__ == '__main__':
 
   # Creating the sub_file with the best prediction
   # create_submission_file_best_param(ratings, test, 'overnight_logging')
+  # create_submission_file_best_param(ratings, test, 'overnight_logging_sgd', algo="SGD")
