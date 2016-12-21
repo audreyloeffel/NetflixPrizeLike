@@ -91,6 +91,7 @@ if __name__ == '__main__':
   # run_als_asynchronously(train, test, 'overnight_logging', ks, lambda_users, lambda_items)
   run_sgd_asynchronously(train, test, 'overnight_logging_sgd', gammas, ks, lambda_users, lambda_items)
 
+
   # Creating the sub_file with the best prediction
   # create_submission_file_best_param(ratings, test, 'overnight_logging')
   # create_submission_file_best_param(ratings, test, 'overnight_logging_sgd', algo="SGD")
