@@ -1,0 +1,10 @@
+Hereafter are the logging of our new found best values/algorithms/parameters
+
+We started by implementing the ALS with missing entries on our data set (with matrix factorization), which is producing our best result on kaggle so far with an RMSE of: 0.98916 with the parameters: k = 3, lambda_user = 0.2, and lambda_item = 0.9
+
+With SGD, the best is now k = 9, l_u = 0.1, l_i = 0.009, gamma = 0.04 with RMSE: 0.97849, LOCAL_RMSE = 0.95987399
+
+
+A tester:
+
+

@@ -127,11 +127,11 @@ def create_csv_submission(prediction):
     Arguments:
     """
     indices = []
-    with open("../data/sampleSubmission.csv", 'r') as sample:
+    with open("data/sampleSubmission.csv", 'r') as sample:
         data = sample.read().splitlines()[1:]
     indices = [ re.match(r'r(\d+?)_c(\d+?),.*?', line, re.DOTALL).groups() for line in data ]
 
-    with open("../data/submission.csv", 'w') as csvfile:
+    with open("data/submission.csv", 'w') as csvfile:
         fieldnames = ['Id', 'Prediction']
         writer = csv.DictWriter(csvfile, delimiter=",", fieldnames=fieldnames)
         writer.writeheader()

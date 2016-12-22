@@ -1,11 +1,21 @@
 # -*- coding: utf-8 -*-
 #!/bin/python3.5
 
+"""
+The als.py file contains everything needed to run ALS in order to predict or to train
+on a dataset. We implemented it ourselves.
+For prediction, run ALS with the train variable containing the dataset and the test
+variable set to None.
+"""
+
 import numpy as np
 from helpers import build_index_groups, compute_error
+import multiprocessing
 from ml_helpers import init_MF
 
-"""update user feature matrix."""
+"""
+Update user feature matrix.
+"""
 def update_user_feature(train, item_features, lambda_user, nnz_items_per_user, nz_user_itemindices):
   Z_final = np.zeros((train.shape[1], item_features.shape[1]))
 
@@ -16,7 +26,7 @@ def update_user_feature(train, item_features, lambda_user, nnz_items_per_user, n
 
   return Z_final
 
-"""update item feature matrix."""
+"""Update item feature matrix."""
 def update_item_feature(train, user_features, lambda_item, nnz_users_per_item, nz_item_userindices):
   W_final = np.zeros((train.shape[0], user_features.shape[1]))
 
@@ -27,7 +37,9 @@ def update_item_feature(train, user_features, lambda_item, nnz_users_per_item, n
 
   return W_final
 
-"""Alternating Least Squares (ALS) algorithm."""
+"""
+Alternating Least Squares (ALS) algorithm.
+"""
 def ALS(train, test, n_f, l_u, l_i):
   print("Running ALS with {} features, lambda user = {}, lambda item = {}".format(n_f, l_u, l_i))
   # define parameters
@@ -44,8 +56,9 @@ def ALS(train, test, n_f, l_u, l_i):
 
   # find the non-zero ratings indices
   nz_train, nz_item_userindices, nz_user_itemindices = build_index_groups(train)
-  nz_row, nz_col = test.nonzero()
-  nz_test = list(zip(nz_row, nz_col))
+  if test is not None:
+    nz_row, nz_col = test.nonzero()
+    nz_test = list(zip(nz_row, nz_col))
 
   rmse = compute_error(train, user_features, item_features, nz_train)
   delta_rmse = np.inf
@@ -56,12 +69,23 @@ def ALS(train, test, n_f, l_u, l_i):
     delta_rmse = rmse
     rmse = compute_error(train, user_features, item_features, nz_train)
     it += 1
-    print("iter: {}, RMSE on training set: {}.".format(it, rmse))
+    if test is not None: print("iter: {}, RMSE on training set: {}.".format(it, rmse))
+    else: print("iter: {}, RMSE: {}.".format(it, rmse))
 
-  rmse_test = compute_error(test, user_features, item_features, nz_test)
-  # Uncomment if logging needed for multiple runs during a long period of time
-  # with open('overnight_logging', 'a') as f:
-  #   f.write("RMSE on testing set: {}, with k: {}, l_u: {}, l_i {}\n".format(rmse_test, num_features, lambda_user, lambda_item))
-  print("RMSE on testing set: {}, with k: {}, l_u: {}, l_i {}".format(rmse_test, rmse_test, lambda_user, lambda_item))
+  rmse_test = 0
+  if test is not None:
+    rmse_test = compute_error(test, user_features, item_features, nz_test)
+    # Uncomment if logging needed for multiple runs during a long period of time
+    # with open('logs/overnight_logging', 'a') as f:
+    #   f.write("RMSE on testing set: {}, with k: {}, l_u: {}, l_i {}\n".format(rmse_test, num_features, lambda_user, lambda_item))
+    print("RMSE on testing set: {}, with k: {}, l_u: {}, l_i {}".format(rmse_test, num_features, lambda_user, lambda_item))
 
   return item_features.dot(user_features.T), rmse_test
+
+"""
+Running ALS asynchronously multiple instances of training at the same time in order to
+find the best set of parameters.
+"""
+def run_als_asynchronously(args_list):
+  pool = multiprocessing.Pool(processes=3)
+  pool.starmap(ALS, args_list)

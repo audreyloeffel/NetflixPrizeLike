@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
-#!/bin/python3.5
+#!/bin/python2.7
 
+"""
+Predict with spark using ALS training on our data.
+DO NOT FORGET TO INSTALL SPARK AND CHANGE THE PATH
+BELOW IF YOU WANT TO RUN THIS FILE.
+"""
 from helpers import create_csv_submission, load_data, split_data
 import sys
 sys.path.append('/usr/local/lib/spark-2.0.2-bin-hadoop2.7/python/')
@@ -24,11 +29,13 @@ def fromArrayToRDD(matrix):
   rdd = sCtxt.parallelize(acc)
   return rdd
 
-
+"""
+Writes to the submission file the predictions
+"""
 if __name__ == '__main__':
 
   # Initializing dataset
-  path_dataset = "../data/data_train.csv"
+  path_dataset = "data/data_train.csv"
   ratings = load_data(path_dataset)
   ratingsRDD = fromArrayToRDD(ratings)
 
@@ -37,13 +44,13 @@ if __name__ == '__main__':
 
   # Parse the submission sample file to get the indices we need to predict
   indices = []
-  with open("../data/sampleSubmission.csv", 'r') as sample:
+  with open("data/sampleSubmission.csv", 'r') as sample:
     data = sample.read().splitlines()[1:]
   indices = [ re.match(r'r(\d+?)_c(\d+?),.*?', line, re.DOTALL).groups() for line in data ]
   indicesRDD = sCtxt.parallelize(indices)
 
   # Predict and write into the sumbmission file
-  with open("../data/submission.csv", 'w') as csvfile:
+  with open("data/submission.csv", 'w') as csvfile:
     fieldnames = ['Id', 'Prediction']
     writer = csv.DictWriter(csvfile, delimiter=",", fieldnames=fieldnames)
     writer.writeheader()

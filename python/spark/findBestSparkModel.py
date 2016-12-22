@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
-#!/bin/python3.5
+#!/bin/python2.7
 
-from helpers import create_csv_submission, load_data, split_data
+"""
+The findBestSparkModel.py file is our implementation of ALS using the SPARK
+MlLib library, do not forget to install spark before running this file,
+and also to change the path below.
+"""
+
+from helpers import load_data
 import sys
 sys.path.append('/usr/local/lib/spark-2.0.2-bin-hadoop2.7/python/')
 from pyspark import SparkContext
 from pyspark.mllib.recommendation import ALS
-import math
 import numpy as np
 import re
 import csv
@@ -25,11 +30,13 @@ def fromArrayToRDD(matrix):
   print("######## RDD created")
   return rdd
 
-
+"""
+Iterates over all the possibles parameters and finds the best ones.
+"""
 if __name__ == '__main__':
 
   # Initializing dataset
-  path_dataset = "../data/data_train.csv"
+  path_dataset = "data/data_train.csv"
   ratings = load_data(path_dataset) # List((9123, 762) 5.0, ...)
   ratingsRDD = fromArrayToRDD(ratings)
 
@@ -40,15 +47,19 @@ if __name__ == '__main__':
 
   seed = 5L
   iterations = 10
-  regularization_parameter =[i * 0.01 for i in range(1, 10)]
-  ranks = range(1, 11)
-  errors = [0] * len(regularization_parameter) * len(ranks)
-  err = 0
+  regularization_parameter =[i * 0.01 for i in range(9, 20)]
+  ranks = [5, 7, 9]
+  # errors = [0] * len(regularization_parameter) * len(ranks)
+  errors = [[0]*len(regularization_parameter)] * len(ranks)
+  ra = 0
+  lam = 0
 
   min_error = float('inf')
   best_lambda = -1
+  best_lambda_index = -1
   best_model = None
   best_rank = -1
+  best_rank_index = -1
 
   # Loop over all possible value fr lambda and rank to find the best parameters for our model that minimize the rmse
   for rank in ranks:
@@ -57,31 +68,25 @@ if __name__ == '__main__':
                           lambda_=regParam)
         predictions = model.predictAll(validation_for_predict_RDD).map(lambda r: ((r[0], r[1]), r[2]))
         rates_and_preds = validation_RDD.map(lambda r: ((int(r[0]), int(r[1])), float(r[2]))).join(predictions)
-        error = math.sqrt(rates_and_preds.map(lambda r: (r[1][0] - r[1][1])**2).mean())
-        errors[err] = error
-        err += 1
+        error = np.sqrt(rates_and_preds.map(lambda r: (r[1][0] - r[1][1])**2).mean())
+        errors[ra][lam] = error
         print 'For lambda %s and rank %s the RMSE is %s' % (regParam, rank, error)
         if error < min_error:
             min_error = error
             best_lambda = regParam
             best_model = model
             best_rank = rank
+            best_rank_index = ra
+            best_lambda_index = lam
+        lam += 1
+        with open('python/logs/sparkLogging', 'a') as f:
+          f.write("RMSE on testing set: {}, with rank: {}, lambda: {}\n".format(error, rank, regParam))
+
+    lam = 0
+    ra += 1
 
   print 'The best model was trained with lambda %s, rank %s and RMSE: %s' % (best_lambda, best_rank, min_error)
 
-  # Parse the submission sample file to get the indices we need to predict
-  indices = []
-  with open("../data/sampleSubmission.csv", 'r') as sample:
-    data = sample.read().splitlines()[1:]
-  indices = [ re.match(r'r(\d+?)_c(\d+?),.*?', line, re.DOTALL).groups() for line in data ]
-  indicesRDD = sCtxt.parallelize(indices)
+  with open('python/logs/sparkLoggingBest', 'a') as f:
+    f.write("RMSE on testing set: {}, with rank: {} at index {}, lambda: {} at index {}\n".format(errors[best_rank_index][best_lambda_index], best_rank, best_lambda_index,  best_lambda, best_lambda_index))
 
-  # Predict and write into the sumbmission file
-  with open("../data/submission.csv", 'w') as csvfile:
-    fieldnames = ['Id', 'Prediction']
-    writer = csv.DictWriter(csvfile, delimiter=",", fieldnames=fieldnames)
-    writer.writeheader()
-    predictions = model.predictAll(indicesRDD)
-    tuples = predictions.map(lambda p: (p[0], p[1], p[2])).collect()
-    for i in range(len(tuples)):
-      writer.writerow({'Id':"r" + str(tuples[i][0]+1) + "_c" + str(tuples[i][1]+1),'Prediction':str(tuples[i][2])})

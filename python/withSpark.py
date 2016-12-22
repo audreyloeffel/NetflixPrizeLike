@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#!/bin/python3.5
+#!/bin/python2.7
 
 from helpers import create_csv_submission, load_data, split_data
 import sys
@@ -26,7 +26,7 @@ def fromArrayToRDD(matrix):
 if __name__ == '__main__':
   # Initializing dataset
 
-  path_dataset = "../data/data_train.csv"
+  path_dataset = "data/data_train.csv"
   ratings = load_data(path_dataset) # List((9123, 762) 5.0, ...)
   ratingsRDD = fromArrayToRDD(ratings)
 
