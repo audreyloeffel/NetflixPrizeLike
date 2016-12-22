@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+#!/bin/python3.5
+
 from sklearn.decomposition import NMF
 
 def init_MF(train, num_features):

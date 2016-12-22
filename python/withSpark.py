@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+#!/bin/python3.5
+
 from helpers import create_csv_submission, load_data, split_data
 import sys
 sys.path.append('/usr/local/lib/spark-2.0.2-bin-hadoop2.7/python/')
@@ -11,10 +14,10 @@ sCtxt = SparkContext()
 def fromArrayToRDD(matrix):
   indices = matrix.nonzero()
   acc = []
-  
+
   for i, j in zip(indices[0], indices[1]):
     acc.append((i, j, matrix[i, j]))
-  
+
   rdd = sCtxt.parallelize(acc)
   print("######## RDD created")
   return rdd
@@ -57,5 +60,5 @@ if __name__ == '__main__':
           min_error = error
           best_rank = rank
 
-  print 'The best model was trained with rank %s and RMSE: %s' % (best_rank, min_error) 
+  print 'The best model was trained with rank %s and RMSE: %s' % (best_rank, min_error)
 

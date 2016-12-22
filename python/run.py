@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #!/bin/python3.5
 
 from als import ALS

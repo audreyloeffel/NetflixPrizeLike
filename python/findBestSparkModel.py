@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+#!/bin/python3.5
+
 from helpers import create_csv_submission, load_data, split_data
 import sys
 sys.path.append('/usr/local/lib/spark-2.0.2-bin-hadoop2.7/python/')
@@ -14,17 +17,17 @@ sCtxt = SparkContext()
 def fromArrayToRDD(matrix):
   indices = matrix.nonzero()
   acc = []
-  
+
   for i, j in zip(indices[0], indices[1]):
     acc.append((i, j, matrix[i, j]))
-  
+
   rdd = sCtxt.parallelize(acc)
   print("######## RDD created")
   return rdd
 
 
 if __name__ == '__main__':
-  
+
   # Initializing dataset
   path_dataset = "../data/data_train.csv"
   ratings = load_data(path_dataset) # List((9123, 762) 5.0, ...)
@@ -46,7 +49,7 @@ if __name__ == '__main__':
   best_lambda = -1
   best_model = None
   best_rank = -1
-  
+
   # Loop over all possible value fr lambda and rank to find the best parameters for our model that minimize the rmse
   for rank in ranks:
     for regParam in regularization_parameter:
@@ -63,8 +66,8 @@ if __name__ == '__main__':
             best_lambda = regParam
             best_model = model
             best_rank = rank
-  
-  print 'The best model was trained with lambda %s, rank %s and RMSE: %s' % (best_lambda, best_rank, min_error) 
+
+  print 'The best model was trained with lambda %s, rank %s and RMSE: %s' % (best_lambda, best_rank, min_error)
 
   # Parse the submission sample file to get the indices we need to predict
   indices = []
@@ -72,7 +75,7 @@ if __name__ == '__main__':
     data = sample.read().splitlines()[1:]
   indices = [ re.match(r'r(\d+?)_c(\d+?),.*?', line, re.DOTALL).groups() for line in data ]
   indicesRDD = sCtxt.parallelize(indices)
-  
+
   # Predict and write into the sumbmission file
   with open("../data/submission.csv", 'w') as csvfile:
     fieldnames = ['Id', 'Prediction']

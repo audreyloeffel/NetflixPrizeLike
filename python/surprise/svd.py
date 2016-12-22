@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*-
 #!/bin/python3.5
+
 from surprise import SVD
 from surprise import KNNWithMeans
 from surprise import Dataset
